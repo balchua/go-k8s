@@ -1,0 +1,4 @@
+package: src/go-k8s/
+import:
+- package: k8s.io/client-go
+  version: v6.0.0
