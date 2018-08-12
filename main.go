@@ -31,20 +31,32 @@ import (
 
 var clientset *kubernetes.Clientset
 
+var namespace string
+
+var pathToConfig string
+
 const ctmJobAnnotation string = "sample.com/job-orchestrator"
 
 func main() {
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "config",
-			Usage: "Kube config path for outside of cluster access",
+			Name:        "config, c",
+			Usage:       "Kube config path for outside of cluster access",
+			Destination: &pathToConfig,
+		},
+
+		cli.StringFlag{
+			Name:        "namespace, ns",
+			Value:       "default",
+			Usage:       "the namespace where the application will poll the service.",
+			Destination: &namespace,
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
 		var err error
-		clientset, err = getClient(c.String("config"))
+		clientset, err = getClient()
 		if err != nil {
 			logrus.Error(err)
 			return err
@@ -60,8 +72,6 @@ func main() {
 }
 
 func pollServices() error {
-	namespace := "default"
-
 	for {
 		services, err := clientset.Core().Services(namespace).List(metav1.ListOptions{})
 		if err != nil {
@@ -81,16 +91,16 @@ func pollServices() error {
 	}
 }
 
-func getClient(pathToCfg string) (*kubernetes.Clientset, error) {
+func getClient() (*kubernetes.Clientset, error) {
 	var config *rest.Config
 	var err error
-	if pathToCfg == "" {
+	if pathToConfig == "" {
 		logrus.Info("Using in cluster config")
 		config, err = rest.InClusterConfig()
 		// in cluster access
 	} else {
 		logrus.Info("Using out of cluster config")
-		config, err = clientcmd.BuildConfigFromFlags("", pathToCfg)
+		config, err = clientcmd.BuildConfigFromFlags("", pathToConfig)
 	}
 	if err != nil {
 		return nil, err
