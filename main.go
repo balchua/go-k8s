@@ -18,71 +18,82 @@ limitations under the License.
 package main
 
 import (
-	"flag"
-	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/Sirupsen/logrus"
+	"github.com/urfave/cli"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
+var clientset *kubernetes.Clientset
+
+const ctmJobAnnotation string = "sample.com/job-orchestrator"
+
 func main() {
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		panic(err.Error())
+	app := cli.NewApp()
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "config",
+			Usage: "Kube config path for outside of cluster access",
+		},
 	}
 
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-	for {
-		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+	app.Action = func(c *cli.Context) error {
+		var err error
+		clientset, err = getClient(c.String("config"))
 		if err != nil {
-			panic(err.Error())
+			logrus.Error(err)
+			return err
 		}
-		fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
-
-		// Examples for error handling:
-		// - Use helper functions like e.g. errors.IsNotFound()
-		// - And/or cast to StatusError and use its properties like e.g. ErrStatus.Message
-		namespace := "default"
-		pod := "example-xxxxx"
-		_, err = clientset.CoreV1().Pods(namespace).Get(pod, metav1.GetOptions{})
-		if errors.IsNotFound(err) {
-			fmt.Printf("Pod %s in namespace %s not found\n", pod, namespace)
-		} else if statusError, isStatus := err.(*errors.StatusError); isStatus {
-			fmt.Printf("Error getting pod %s in namespace %s: %v\n",
-				pod, namespace, statusError.ErrStatus.Message)
-		} else if err != nil {
-			panic(err.Error())
-		} else {
-			fmt.Printf("Found pod %s in namespace %s\n", pod, namespace)
+		go pollServices()
+		// watchNodes()
+		for {
+			time.Sleep(5 * time.Second)
+			logrus.Infof("Doing nothing")
 		}
+	}
+	app.Run(os.Args)
+}
 
+func pollServices() error {
+	namespace := "default"
+
+	for {
+		services, err := clientset.Core().Services(namespace).List(metav1.ListOptions{})
+		if err != nil {
+			logrus.Warnf("Failed to poll the services: %v", err)
+			continue
+		}
+		for _, service := range services.Items {
+			a := service.ObjectMeta.GetAnnotations()
+			if a[ctmJobAnnotation] != "" {
+				logrus.Infof("Service (%s) has the annotation %s set to %s", service.ObjectMeta.Name, ctmJobAnnotation, a[ctmJobAnnotation])
+			} else {
+				logrus.Infof("The service (%s) does not have the annotation", service.ObjectMeta.Name)
+			}
+
+		}
 		time.Sleep(10 * time.Second)
 	}
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
+func getClient(pathToCfg string) (*kubernetes.Clientset, error) {
+	var config *rest.Config
+	var err error
+	if pathToCfg == "" {
+		logrus.Info("Using in cluster config")
+		config, err = rest.InClusterConfig()
+		// in cluster access
+	} else {
+		logrus.Info("Using out of cluster config")
+		config, err = clientcmd.BuildConfigFromFlags("", pathToCfg)
 	}
-	return os.Getenv("USERPROFILE") // windows
+	if err != nil {
+		return nil, err
+	}
+	return kubernetes.NewForConfig(config)
 }

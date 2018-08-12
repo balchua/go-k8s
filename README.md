@@ -1,2 +1,2 @@
 # go-k8s
-sample kube client-go codes
+This is a sample code to interact with Kubernetes using client-go.
