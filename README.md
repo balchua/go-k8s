@@ -4,7 +4,7 @@ This is a sample code to interact with Kubernetes using client-go.
 Two ways to run the application:
 1. out of the cluster - This is a normal executable program to interact with kubernetes cluster.  You can use minikube.
 
-2.  In cluster - TODO
+2.  In cluster - TODO 
 
 
 ## What the application does
