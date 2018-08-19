@@ -20,12 +20,12 @@ This is a preclude to the possibility of performing actions when services with s
 
 3.  `github.com/Sirupsen/logrus` - Standard logging mechanism for `Go`.
 
-Check the `glide.yaml` to see all the dependencies.
+Check the `Gopkg.toml` to see all the dependencies.
 
-## To build and run
-1. Make sure you have glide installed in your system
+## To build and run 
+1. Make sure you have `dep` installed in your system
 2. Go to the working directory `$GOPATH/src/go-k8s/`.
-3. Update all the dependencies using `glide update --strip-vendor` to update all the dependencies.
+3. Update all the dependencies using `dep ensure` to update all the dependencies.
 4. Do `go build`
 5. Finally to run the application `./go-k8s --config $KUBECONFIG`.  This allows the application to retrieve the kubernetes configuration.
 
