@@ -9,7 +9,7 @@ Two ways to run the application:
 
 ## What the application does
 
-The application polls all the services in the `default` namespace and gets all the kubernetes services in that namespace.  After which the application checks if the service contains the annotation `sample.com/job-orchestrator` is set to `true`.
+The application polls all the services in the `<your namespace>` namespace and gets all the kubernetes services in that namespace.  After which the application checks if the service contains the annotation `sample.com/job-orchestrator` is set to `true`.
 
 This is a preclude to the possibility of performing actions when services with such annotations exist.
 
@@ -27,7 +27,7 @@ Check the `Gopkg.toml` to see all the dependencies.
 2. Go to the working directory `$GOPATH/src/go-k8s/`.
 3. Update all the dependencies using `dep ensure` to update all the dependencies.
 4. Do `go build`
-5. Finally to run the application `./go-k8s --config $KUBECONFIG`.  This allows the application to retrieve the kubernetes configuration.
+5. Finally to run the application `./go-k8s --config $KUBECONFIG --namespace <yournamespace>`.  This allows the application to retrieve the kubernetes configuration.
 
 ** If you need cluster admin, make sure you have the necessary administrator rights on the cluster.
 
