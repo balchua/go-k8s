@@ -4,7 +4,7 @@ metadata:
   name: nginx-deployment
   namespace: dummycontroller
   annotations:
-    intraday-enabled: "true"
+    bal.io/intraday-enabled: "true"
 spec:
   selector:
     matchLabels:

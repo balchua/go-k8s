@@ -5,7 +5,7 @@ metadata:
   name: demo
   namespace: default
   annotations:
-    sample.com/job-orchestrator: "true"
+    bal.io/job-orchestrator: "true"
   labels:
     run: demo
 spec:
