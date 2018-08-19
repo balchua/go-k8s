@@ -43,7 +43,7 @@ func main() {
 		},
 
 		cli.StringFlag{
-			Name:        "namespace, ns",
+			Name:        "namespace, n",
 			Value:       "default",
 			Usage:       "the namespace where the application will poll the service.",
 			Destination: &namespace,
