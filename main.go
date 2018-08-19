@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-k8s/handler"
 	"os"
 	"time"
 
@@ -17,8 +18,6 @@ var clientset *kubernetes.Clientset
 var namespace string
 
 var pathToConfig string
-
-const ctmJobAnnotation string = "sample.com/job-orchestrator"
 
 func init() {
 	// Log as JSON instead of the default ASCII formatter.
@@ -76,12 +75,7 @@ func pollServices() error {
 			continue
 		}
 		for _, service := range services.Items {
-			a := service.ObjectMeta.GetAnnotations()
-			if a[ctmJobAnnotation] != "" {
-				logrus.Infof("Service (%s) has the annotation %s set to %s", service.ObjectMeta.Name, ctmJobAnnotation, a[ctmJobAnnotation])
-			} else {
-				logrus.Infof("The service (%s) does not have the annotation", service.ObjectMeta.Name)
-			}
+			handler.HandleService(service)
 
 		}
 		time.Sleep(10 * time.Second)
