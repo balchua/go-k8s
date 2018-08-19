@@ -57,7 +57,7 @@ func main() {
 			return err
 		}
 		go pollServices()
-		// watchNodes()
+		go pollDeployments()
 		for {
 			//keep the application alive.
 			time.Sleep(5 * time.Second)
@@ -76,6 +76,22 @@ func pollServices() error {
 		}
 		for _, service := range services.Items {
 			handler.HandleService(service)
+
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func pollDeployments() error {
+	for {
+		deploymentClient := clientset.AppsV1().Deployments(namespace)
+		deployments, err := deploymentClient.List(metav1.ListOptions{})
+		if err != nil {
+			logrus.Warnf("Failed to poll the services: %v", err)
+			continue
+		}
+		for _, deployment := range deployments.Items {
+			handler.HandleDeployment(deployment, deploymentClient, "stop")
 
 		}
 		time.Sleep(10 * time.Second)
