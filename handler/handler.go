@@ -7,7 +7,9 @@ import (
 	"k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-const ctmJobAnnotation string = "sample.com/job-orchestrator"
+const ctmJobAnnotation string = "bal.io/job-orchestrator"
+const intradayEnabledAnnotation string = "bal.io/intraday-enabled"
+const targetReplicasAnnotation string = "bal.io/target-replicas"
 
 /*
 HandleService - currently not doing anything.  Just listing down services with
@@ -40,7 +42,7 @@ func HandleDeployment(deployment appsv1.Deployment, deploymentClient v1.Deployme
 func scaleToZero(deployment appsv1.Deployment, deploymentClient v1.DeploymentInterface) {
 	a := deployment.ObjectMeta.GetAnnotations()
 
-	if a["intraday-enabled"] == "true" {
+	if a[intradayEnabledAnnotation] == "true" {
 		if *deployment.Spec.Replicas > int32(0) {
 			logrus.Infof("Deployment (%s) has the annotation scaling to zero", deployment.ObjectMeta.Name)
 			deployment.Spec.Replicas = int32Ptr(0)
