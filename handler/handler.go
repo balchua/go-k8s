@@ -9,7 +9,10 @@ import (
 
 const ctmJobAnnotation string = "sample.com/job-orchestrator"
 
-//Handle the services with such annotations defined in ctmJobAnnotation
+/*
+HandleService - currently not doing anything.  Just listing down services with
+  ctmJobAnnotation annotation
+*/
 func HandleService(service corev1.Service) {
 	a := service.ObjectMeta.GetAnnotations()
 	if a[ctmJobAnnotation] != "" {
@@ -20,7 +23,11 @@ func HandleService(service corev1.Service) {
 
 }
 
-//Verifies if the deployment contains the right annotation, it will scale the deployment to stop or start
+/*
+HandleDeployment - Verifies if the deployment contains the "intraday-enabled"annotation,
+  it will scale the deployment to zero to stop
+  and scale to targetReplica to start.
+*/
 func HandleDeployment(deployment appsv1.Deployment, deploymentClient v1.DeploymentInterface, action string) {
 	if action == "stop" {
 		scaleToZero(deployment, deploymentClient)
